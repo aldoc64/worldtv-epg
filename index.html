@@ -131,7 +131,8 @@ function makeChannelEl(c) {
     epg.textContent = 'Loading guide...';
     div.appendChild(epg);
 
-    fetch(`https://worldtv-epg.vercel.app/api/epg?id=${encodeURIComponent(c.id)}`)
+    //fetch(`https://worldtv-epg.vercel.app/api/epg?id=${encodeURIComponent(c.id)}`)
+    fetch(`https://epg-api-one.vercel.app/api/epg?id=${encodeURIComponent(c.id)}`)
       .then(res => res.json())
       .then(data => {
         epg.innerHTML = '';
