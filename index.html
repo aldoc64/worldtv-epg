@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>World TV with EPG</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>World TV with Favourites & EPG</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body { display: flex; height: 100vh; margin: 0; font-family: sans-serif; }
     #sidebar, #favorites, #channels { padding: 10px; overflow: auto; border-right: 1px solid #ccc; }
@@ -20,9 +20,9 @@
     .country-btn img { width: 20px; height: 15px; margin-right: 5px; }
     .country-btn.active { background: #d0e0ff; }
 
-    .channel { display: flex; align-items: center; padding: 5px; margin-bottom: 5px; cursor: pointer; flex-direction: column; align-items: flex-start; }
+    .channel { display: flex; flex-direction: column; align-items: flex-start; padding: 5px; margin-bottom: 5px; cursor: pointer; }
     .channel > div:first-child { display: flex; align-items: center; width: 100%; }
-    .channel img { width: 40px; height: 40px; object-fit: contain; max-height: 40px; margin-right: 8px; }
+    .channel img { width: 40px; height: 40px; object-fit: contain; margin-right: 8px; }
     .channel.selected { background: #d8f0ff; }
     .star { margin-left: auto; color: #bbb; font-size: 20px; cursor: pointer; }
     .star.fav { color: gold; }
@@ -32,24 +32,25 @@
   </style>
 </head>
 <body>
-  <div id="sidebar">
-    <input id="searchCountry" placeholder="🔍 Search countries..." style="width:100%;padding:5px;margin-bottom:5px;">
-    <div id="regions">Loading countries...</div>
-  </div>
 
-  <div id="favorites">
-    <h3>⭐ Favourite Channels</h3>
-    <div id="favList">None</div>
-  </div>
+<div id="sidebar">
+  <input id="searchCountry" placeholder="🔍 Search countries..." style="width:100%;padding:5px;margin-bottom:5px;">
+  <div id="regions">Loading countries...</div>
+</div>
 
-  <div id="channels">
-    <h3>Channels</h3>
-    <div id="channelList">Select a country to view channels</div>
-  </div>
+<div id="favorites">
+  <h3>⭐ Favourite Channels</h3>
+  <div id="favList">None</div>
+</div>
 
-  <div id="player">
-    <video id="tvPlayer" controls autoplay></video>
-  </div>
+<div id="channels">
+  <h3>Channels</h3>
+  <div id="channelList">Select a country</div>
+</div>
+
+<div id="player">
+  <video id="tvPlayer" controls autoplay></video>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
@@ -66,7 +67,8 @@ async function init() {
     div.innerHTML = `<h4>${region.name} ⯈</h4><div class="countries"></div>`;
     region.countries.forEach(code => {
       const btn = document.createElement('button'); btn.className = 'country-btn'; btn.dataset.code = code;
-      btn.innerHTML = `<img src="https://flagcdn.com/h20/${code.toLowerCase()}.png"> ${countryNameMap[code] || code}`;
+      btn.innerHTML = `<img src="https://flagcdn.com/20x15/${code.toLowerCase()}.png"
+        srcset="https://flagcdn.com/40x30/${code.toLowerCase()}.png 2x"> ${countryNameMap[code] || code}`;
       btn.onclick = () => selectCountry(code, btn);
       div.querySelector('.countries').appendChild(btn);
     });
@@ -76,6 +78,7 @@ async function init() {
   document.getElementById('searchCountry').oninput = filterCountries;
   loadFavorites();
 }
+init();
 
 function filterCountries() {
   const term = document.getElementById('searchCountry').value.toLowerCase();
@@ -95,14 +98,14 @@ async function selectCountry(code, btn) {
   document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const m3u = await fetch(`https://iptv-org.github.io/iptv/countries/${code.toLowerCase()}.m3u`).then(r=>r.text());
-  const lines = m3u.split('\n'); currentChannels = [];
+  const lines = m3u.split('\\n'); currentChannels = [];
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].startsWith('#EXTINF')) {
       const title = lines[i].split(',')[1]?.trim();
       const logo = (lines[i].match(/tvg-logo="([^"]+)"/)||[])[1];
       const id = (lines[i].match(/tvg-id="([^"]+)"/)||[])[1];
       const url = lines[i+1]?.trim();
-      if (url) currentChannels.push({title, logo, url, id});
+      if (url) currentChannels.push({title, logo, url, id, country: code});
     }
   }
   renderChannels();
@@ -115,15 +118,21 @@ function renderChannels() {
 }
 
 function makeChannelEl(c) {
-  if (!c || !c.title || !c.url) return document.createTextNode('');
-  const div=document.createElement('div'); div.className='channel';
-  const flag = (c.fromFavorites && c.country) ? `<img src="https://flagcdn.com/h20/${c.country.toLowerCase()}.png" title="${c.country.toUpperCase()}" style="margin-right:4px; vertical-align:middle;">` : '';
-  div.innerHTML=`${flag}${c.logo?`<img src="${c.logo}" alt="">`:''}<span>${c.title}</span>`;
-  const star=document.createElement('span');
-  star.className='star'+(favorites.find(f=>f.url===c.url)?' fav':'');
-  star.innerHTML='★';
-  star.onclick=e=>{ e.stopPropagation(); toggleFav(c); };
-  div.appendChild(star);
+  const div = document.createElement('div');
+  div.className = 'channel';
+  const head = document.createElement('div');
+  const flag = (c.fromFavorites && c.country)
+    ? `<img src="https://flagcdn.com/20x15/${c.country.toLowerCase()}.png"
+             srcset="https://flagcdn.com/40x30/${c.country.toLowerCase()}.png 2x"
+             style="margin-right:4px; vertical-align:middle;" width="20" height="15">`
+    : '';
+  head.innerHTML = `${flag}${c.logo ? `<img src="${c.logo}">` : ''}<span>${c.title}</span>`;
+  const star = document.createElement('span');
+  star.className = 'star' + (favorites.find(f => f.url === c.url) ? ' fav' : '');
+  star.textContent = '★';
+  star.onclick = e => { e.stopPropagation(); toggleFavorite(c); };
+  head.appendChild(star);
+  div.appendChild(head);
   if (c.id) {
     const epg = document.createElement('div');
     epg.className = 'epg';
@@ -148,7 +157,7 @@ function makeChannelEl(c) {
 function toggleFavorite(c) {
   const i = favorites.findIndex(f => f.url === c.url);
   if (i >= 0) favorites.splice(i, 1);
-  else favorites.push({title: c.title, url: c.url, logo: c.logo, id: c.id});
+  else favorites.push({title: c.title, url: c.url, logo: c.logo, id: c.id, country: c.country});
   localStorage.setItem('fav_channels', JSON.stringify(favorites));
   loadFavorites();
 }
@@ -158,7 +167,8 @@ function loadFavorites() {
   favDiv.innerHTML = '';
   if (!favorites.length) { favDiv.textContent = 'None'; return; }
   favorites.forEach(c => {
-    const div = makeChannelEl(c);
+    const ch = { ...c, fromFavorites: true };
+    const div = makeChannelEl(ch);
     favDiv.appendChild(div);
   });
 }
@@ -177,8 +187,7 @@ function play(url, element) {
     video.play();
   }
 }
-
-init();
 </script>
+
 </body>
 </html>
