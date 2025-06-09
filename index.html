@@ -115,18 +115,15 @@ function renderChannels() {
 }
 
 function makeChannelEl(c) {
-  const div = document.createElement('div');
-  div.className = 'channel';
-  const head = document.createElement('div');
-  head.innerHTML = `${c.logo ? `<img src="${c.logo}">` : ''}<span>${c.title}</span>`;
+  if (!c || !c.title || !c.url) return document.createTextNode('');
+  const div=document.createElement('div'); div.className='channel';
   const flag = (c.fromFavorites && c.country) ? `<img src="https://flagcdn.com/h20/${c.country.toLowerCase()}.png" title="${c.country.toUpperCase()}" style="margin-right:4px; vertical-align:middle;">` : '';
   div.innerHTML=`${flag}${c.logo?`<img src="${c.logo}" alt="">`:''}<span>${c.title}</span>`;
-  const star = document.createElement('span');
-  star.className = 'star' + (favorites.find(f => f.url === c.url) ? ' fav' : '');
-  star.textContent = '★';
-  star.onclick = e => { e.stopPropagation(); toggleFavorite(c); };
-  head.appendChild(star);
-  div.appendChild(head);
+  const star=document.createElement('span');
+  star.className='star'+(favorites.find(f=>f.url===c.url)?' fav':'');
+  star.innerHTML='★';
+  star.onclick=e=>{ e.stopPropagation(); toggleFav(c); };
+  div.appendChild(star);
   if (c.id) {
     const epg = document.createElement('div');
     epg.className = 'epg';
