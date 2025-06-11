@@ -218,7 +218,9 @@ async function selectCountry(code, btn){
       const title=lines[i].split(',')[1]?.trim();
       const logo=(lines[i].match(/tvg-logo="([^"]+)"/)||[])[1]||'';
       const url=lines[i+1]?.trim();
-      if(url)currentChannels.push({title,logo,url,country:currentCountryCode});
+      if(url && url.startsWith('https://')) {
+  	currentChannels.push({ title, logo, url, country: currentCountryCode, id });
+	}
     }
   }
   renderChannels();
