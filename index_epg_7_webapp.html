@@ -1,0 +1,320 @@
+<!doctype html><html><head></head><body><!DOCTYPE html>
+<html lang="it">
+
+<head>
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#000000">
+	<meta charset="UTF-8">
+	<title>World TV with favourites and EPG</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<style>
+		body {
+			display: flex;
+			height: 100vh;
+			margin: 0;
+			font-family: sans-serif;
+		}
+
+		#titolo {
+			overflow: auto;
+			text-indent:1em;
+			text-align: center
+		}
+
+		#sidebar {
+			width: 220px;
+			background: #f7f7f7;
+			overflow: auto;
+			padding: 10px;
+			border-right: 1px solid #ccc;
+		}
+
+		#favorites {
+			width: 200px;
+			background: #fff8dc;
+			overflow: auto;
+			padding: 10px;
+			border-right: 1px solid #ccc;
+		}
+
+		#channels {
+			width: 300px;
+			overflow: auto;
+			background: #fafafa;
+			padding: 10px;
+			border-right: 1px solid #ccc;
+		}
+
+		#player {
+			flex: 1;
+			background: black;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		video {
+			width: 100%;
+			max-height: 95vh;
+		}
+
+		.region h4 {
+			margin: 5px 0;
+			padding: 5px;
+			background: #ddd;
+			cursor: pointer;
+		}
+
+		.countries {
+			display: none;
+			padding-left: 10px;
+		}
+
+		.region.open .countries {
+			display: block;
+		}
+
+		.country-btn {
+			display: flex;
+			align-items: center;
+			padding: 5px;
+			border: none;
+			background: none;
+			width: 100%;
+			cursor: pointer;
+		}
+
+		.country-btn img {
+			width: 20px;
+			height: 15px;
+			margin-right: 5px;
+		}
+
+		.country-btn.active {
+			background: #e0e0e0;
+		}
+
+		.channel {
+			display: flex;
+			align-items: center;
+			padding: 5px;
+			cursor: pointer;
+			margin-bottom: 5px;
+		}
+
+		.channel img {
+			width: 40px;
+			height: 40px;
+			margin-right: 8px;
+			object-fit: contain;
+			max-height: 40px;
+			max-width: 40px;
+		}
+
+		.channel.selected {
+			background: #d0f0ff;
+		}
+
+		.star {
+			margin-left: auto;
+			font-size: 20px;
+			cursor: pointer;
+			color: #ccc;
+		}
+
+		.star.fav {
+			color: gold;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="sidebar">
+		<input id="searchCountry" placeholder="🔍 Search Countries..." style="width:100%;padding:5px;margin-bottom:5px;">
+		<div id="regions">Loading...</div>
+	</div>
+
+	<div id="favorites">
+		<h3>⭐ Favourite Channels</h3>
+		<h5>Click the star to remove channel</h5>
+		<div id="favList">Nothing</div>
+	</div>
+
+	<div id="channels">
+		<h3>Channels</h3>
+		<h5>Click the star to favourite channel</h5>
+		<div id="channelList">Select a Country</div>
+	</div>
+
+  <div id="titolo">
+    <h3>World TV</h3>
+    <h5>Watch TV from all over the world</h5>
+    <p></p>
+    <div id="player"><video id="tvPlayer" controls autoplay></video></div>
+	<p></p>
+	<div id="epgDisplay" style="padding:10px;background:#222;color:white;font-family:sans-serif;text-align:left;"></div>
+    <p></p>
+	<script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+		<script type='text/javascript'>
+			kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'Z8Z4XHWCD');kofiwidget2.draw();
+		</script>
+		<p></p>
+  </div>
+
+	<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+	<script>
+		const countryNameMap = {}, favorites = JSON.parse(localStorage.getItem('fav_channels')||'[]');
+let currentChannels = [], currentCountryCode='';
+
+async function init(){
+  const countries = await fetch('https://iptv-org.github.io/api/countries.json').then(r=>r.json());
+  countries.forEach(c=>countryNameMap[c.code]=c.name);
+  const regions = await fetch('https://iptv-org.github.io/api/regions.json').then(r=>r.json());
+  const regionsDiv = document.getElementById('regions');
+  regionsDiv.innerHTML='';
+
+  regions.forEach(region=>{
+    const div = document.createElement('div'); div.className='region';
+    div.innerHTML = `<h4>${region.name} ⯈</h4><div class="countries"></div>`;
+    const countriesDiv = div.querySelector('.countries');
+    region.countries.forEach(code=>{
+      const name = countryNameMap[code]||code;
+      const btn = document.createElement('button'); btn.className='country-btn';
+      btn.dataset.code=code;
+      if (code === 'UK') {fxcode = 'GB';} else {fxcode = code}
+      btn.innerHTML=`<img src="https://flagcdn.com/16x12/${fxcode.toLowerCase()}.png"> ${name} (${code})`;
+      btn.onclick=()=>selectCountry(code, btn);
+      countriesDiv.appendChild(btn);
+    });
+    div.querySelector('h4').onclick=()=>div.classList.toggle('open');
+    regionsDiv.appendChild(div);
+  });
+  document.getElementById('searchCountry').oninput=filterCountries;
+  loadFavoritesUI();
+}
+init();
+
+function filterCountries(){
+  const term = document.getElementById('searchCountry').value.toLowerCase();
+  document.querySelectorAll('.region').forEach(region=>{
+    let any=false;
+    region.querySelectorAll('.country-btn').forEach(btn=>{
+      const show = btn.textContent.toLowerCase().includes(term);
+      btn.style.display=show?'flex':'none';
+      if(show) any=true;
+    });
+    region.classList.toggle('open',any);
+  });
+}
+
+async function selectCountry(code, btn){
+  currentCountryCode=code;
+  document.querySelectorAll('.country-btn').forEach(b=>b.classList.toggle('active',b.dataset.code===code));
+  document.getElementById('channelList').innerHTML='Caricamento canali…';
+
+  const text = await fetch(`https://iptv-org.github.io/iptv/countries/${code.toLowerCase()}.m3u`).then(r=>r.text());
+  const lines=text.split('\n');
+  currentChannels=[];
+
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].startsWith('#EXTINF')){
+      const title=lines[i].split(',')[1]?.trim();
+      const logo=(lines[i].match(/tvg-logo="([^"]+)"/)||[])[1]||'';
+      const url=lines[i+1]?.trim();
+	  const id=(lines[i].match(/tvg-id="([^"]+)"/)||[])[1]||'';
+      if(url) currentChannels.push({ title, logo, url, country: currentCountryCode, id });
+    }
+  }
+  renderChannels();
+}
+
+function renderChannels(){
+  const chanDiv = document.getElementById('channelList');
+  chanDiv.innerHTML='';
+  currentChannels.forEach(c=>chanDiv.appendChild(makeChannelEl(c)));
+}
+
+function makeChannelEl(c){
+  if (!c || !c.title || !c.url) return document.createTextNode('');
+  const div=document.createElement('div'); div.className='channel';
+  if (c.country === 'UK') {codiceflag = 'GB';} else {codiceflag = c.country}
+  const flag = (c.fromFavorites && c.country) ? `<img src="https://flagcdn.com/h20/${codiceflag.toLowerCase()}.png" title="${c.country.toUpperCase()}" style="margin-right:4px; vertical-align:middle;">` : '';
+  div.innerHTML=`${flag}${c.logo?`<img src="${c.logo}" alt="">`:''}<span>${c.title}</span>`;
+  const star=document.createElement('span');
+  star.className='star'+(favorites.find(f=>f.url===c.url)?' fav':'');
+  star.innerHTML='★';
+  star.onclick=e=>{ e.stopPropagation(); toggleFav(c); };
+  div.appendChild(star);
+  div.onclick=()=>playChannel(c);
+  return div;
+}
+
+function toggleFav(c){
+  const idx = favorites.findIndex(f => f.url === c.url);
+  if(idx >= 0) favorites.splice(idx, 1);
+  else favorites.push({ title: c.title, logo: c.logo, url: c.url, country: c.country, id: c.id });
+  localStorage.setItem('fav_channels', JSON.stringify(favorites));
+  loadFavoritesUI();
+}
+
+function playChannel(c){
+  document.querySelectorAll('.channel').forEach(d=>d.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  const dl=document.getElementById('tvPlayer');
+  if(Hls.isSupported()){
+    const hls=new Hls();hls.loadSource(c.url);hls.attachMedia(dl);
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>dl.play());
+  } else if(dl.canPlayType('application/vnd.apple.mpegurl')){
+    dl.src=c.url;dl.play();
+  } else alert("HLS not supported");
+
+  const epgDiv = document.getElementById('epgDisplay');
+  epgDiv.innerHTML = 'Loading program guide…';
+  if (!c.id) {
+    epgDiv.innerHTML = 'EPG not available (no ID)';
+    return;
+  }
+  console.log("EPG ID:", c.id);
+  fetch(`https://epg-api-one.vercel.app/api/epg?id=${encodeURIComponent(c.id)}`)
+    .then(r => r.json())
+    .then(data => {
+      console.log("EPG data for", c.id, data);
+      epgDiv.innerHTML = `
+        <strong>Channel ID:</strong> ${c.id}<br>
+        <strong>Now:</strong> ${data.now?.title || 'n/a'}<br>
+        <strong>Next:</strong> ${data.next?.title || 'n/a'}
+      `;
+    })
+    .catch(err => {
+      console.error("EPG error", err);
+      epgDiv.innerHTML = 'EPG not available';
+    });
+
+}
+
+function loadFavoritesUI(){
+  const favListDiv = document.getElementById('favList');
+  favListDiv.innerHTML='';
+  const validFavs = favorites.filter(f => f && f.title && f.url);
+  if(!validFavs.length){ favListDiv.textContent='Nothing'; return; }
+  validFavs.forEach(c => {
+    const favChannel = { ...c, fromFavorites: true };
+    const div = makeChannelEl(favChannel);
+    favListDiv.appendChild(div);
+  });
+}
+	</script>
+</body>
+
+</html>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log("✅ Service worker registered"))
+      .catch(err => console.warn("❌ Service worker failed", err));
+  }
+</script>
+
+</body><html>
