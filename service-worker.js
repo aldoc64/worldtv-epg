@@ -48,8 +48,7 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   //// Aggiunta ----
   if (event.request.url.endsWith('manifest.webmanifest')) {
-    event.respondWith(fetch(event.request)); // Lascialo passare direttamente al browser
-    return;
+  return; // “bypass” completo
   }
   //// Fine aggiunta ----
 
