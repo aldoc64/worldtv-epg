@@ -2,7 +2,7 @@
 <html lang="it">
 
 <head>
-	<link rel="manifest" href="manifest.json">
+	//<link rel="manifest" href="manifest.json">
 	<meta name="theme-color" content="#000000">
 	<meta charset="UTF-8">
 	<title>World TV with favourites and EPG</title>
@@ -126,6 +126,9 @@
 			color: gold;
 		}
 	</style>
+
+	<link rel="manifest" href="/worldtv-epg/app.webmanifest">
+	
 </head>
 
 <body>
@@ -309,12 +312,28 @@ function loadFavoritesUI(){
 
 </html>
 
+//<script>
+//  if ('serviceWorker' in navigator) {
+//    navigator.serviceWorker.register('service-worker.js')
+//      .then(() => console.log("✅ Service worker registered"))
+//      .catch(err => console.warn("❌ Service worker failed", err));
+//  }
+//</script>
+
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log("✅ Service worker registered"))
-      .catch(err => console.warn("❌ Service worker failed", err));
-  }
-</script>
+       // Registrazione del Service Worker
+       if ('serviceWorker' in navigator) {
+           window.addEventListener('load', () => {
+               // Assicurati che il percorso del service worker sia corretto per worldtv-epg
+               navigator.serviceWorker.register('/worldtv-epg/service-worker.js')
+                   .then(registration => {
+                       console.log('Service Worker di WorldTV EPG registrato con successo:', registration);
+                   })
+                   .catch(error => {
+                       console.error('Registrazione Service Worker di WorldTV EPG fallita:', error);
+                   });
+           });
+       }
+    </script>
 
 </body><html>
