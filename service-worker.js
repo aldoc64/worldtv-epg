@@ -47,19 +47,19 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
   //// Aggiunta ----
-  //if (event.request.url.endsWith('app.webmanifest')) {
-  //  return; // Lascialo passare direttamente al browser
-  //}
+  if (event.request.url.endsWith('app.webmanifest')) {
+    return; // Lascialo passare direttamente al browser
+  }
   //// Fine aggiunta ----
 
   // Aggiunta 16:34 31/07/2025
-
-  if (event.request.url.includes('app.webmanifest')) {
-  console.log('[Service Worker] Bypass del manifest');
-  event.respondWith(fetch(event.request));
-  return;
-  }
-
+  //
+  //if (event.request.url.includes('app.webmanifest')) {
+  //console.log('[Service Worker] Bypass del manifest');
+  //event.respondWith(fetch(event.request));
+  //return;
+  //}
+  //
   // Fine Aggiunta 16:34 31/07/2025
   
   event.respondWith(
