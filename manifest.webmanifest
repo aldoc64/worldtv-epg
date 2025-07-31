@@ -3,6 +3,7 @@
       "short_name": "WorldTV EPG",
       "description": "Guida TV per canali internazionali.",
       "start_url": "/worldtv-epg/index.html",
+      "scope": "/worldtv-epg/",
       "display": "standalone",
       "background_color": "#ffffff",
       "theme_color": "#000000",
