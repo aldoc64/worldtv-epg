@@ -4,7 +4,7 @@ const BASE_PATH = '/worldtv-epg/'; // Definisci la base path del tuo repository 
 const urlsToCache = [
   BASE_PATH, // La root del tuo repository
   BASE_PATH + 'index.html',
-  BASE_PATH + 'app.webmanifest', // AGGIORNATO QUI
+  // BASE_PATH + 'app.webmanifest', // AGGIORNATO QUI
   BASE_PATH + 'service-worker.js',
   // Assicurati che queste icone esistano nella root del tuo repository worldtv-epg
   BASE_PATH + 'icon-192x192.png', 
@@ -46,6 +46,11 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Aggiunta ----
+  if (event.request.url.endsWith('app.webmanifest')) {
+    return; // Lascialo passare direttamente al browser
+  }
+  // Fine aggiunta ----
   event.respondWith(
     caches.match(event.request)
       .then(response => {
