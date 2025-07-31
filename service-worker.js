@@ -47,8 +47,9 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
   //// Aggiunta ----
-  if (event.request.url.includes('manifest.webmanifest')) {
-    return fetch(event.request); // Lascialo passare direttamente al browser
+  if (event.request.url.endsWith('manifest.webmanifest')) {
+    event.respondWith(fetch(event.request)); // Lascialo passare direttamente al browser
+    return;
   }
   //// Fine aggiunta ----
 
