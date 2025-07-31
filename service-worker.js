@@ -4,7 +4,7 @@ const BASE_PATH = '/worldtv-epg/'; // Definisci la base path del tuo repository 
 const urlsToCache = [
   BASE_PATH, // La root del tuo repository
   BASE_PATH + 'index.html',
-  BASE_PATH + 'app.webmanifest', // AGGIORNATO QUI
+  //BASE_PATH + 'app.webmanifest', // AGGIORNATO QUI
   BASE_PATH + 'service-worker.js',
   // Assicurati che queste icone esistano nella root del tuo repository worldtv-epg
   BASE_PATH + 'icon-192x192.png', 
