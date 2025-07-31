@@ -1,11 +1,11 @@
 {
-  "name": "World TV",
-  "short_name": "WorldTV",
-  "start_url": ".",
+  "name": "WorldTV EPG",
+  "short_name": "WorldTV EPG",
+  "description": "Guida TV per canali internazionali.",
+  "start_url": "/worldtv-epg/index.html",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#ffffff",
   "theme_color": "#000000",
-  "orientation": "any",
   "icons": [
     {
       "src": "icon-192x192.png",
