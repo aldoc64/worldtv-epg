@@ -12,6 +12,17 @@ const urlsToCache = [
   // Rimuovi qui eventuali URL di CDN esterne che causano errori di caching
 ];
 
+// Aggiungo questo ---
+
+self.addEventListener('fetch', function(event) {
+  if (event.request.url.includes('app.webmanifest')) {
+    // Non gestire questa fetch, lascia che il browser lo carichi da solo
+    return;
+  }
+});
+
+// Fine aggiunta ---
+
 self.addEventListener('install', event => {
   console.log('Service Worker di WorldTV EPG: Evento Installazione');
   event.waitUntil(
