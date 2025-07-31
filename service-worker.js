@@ -47,8 +47,8 @@ self.addEventListener('install', event => {
 
 self.addEventListener('fetch', event => {
   //// Aggiunta ----
-  if (event.request.url.endsWith('app.webmanifest')) {
-    return; // Lascialo passare direttamente al browser
+  if (event.request.url.includes('manifest.webmanifest')) {
+    return fetch(event.request); // Lascialo passare direttamente al browser
   }
   //// Fine aggiunta ----
 
@@ -64,12 +64,7 @@ self.addEventListener('fetch', event => {
   
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
+      .then(response => response || fetch(event.request))
   );
 });
 
