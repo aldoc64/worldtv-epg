@@ -45,6 +45,15 @@ self.addEventListener('install', event => {
   );
 });
 
+// Aggiunta 16:28 31/07/2025
+
+if (event.request.url.includes('app.webmanifest')) {
+  console.log('[Service Worker] Bypass del manifest');
+  return fetch(event.request);
+}
+
+// Fine aggiunta 16:28 31/07/2025
+
 self.addEventListener('fetch', event => {
   // Aggiunta ----
   if (event.request.url.endsWith('app.webmanifest')) {
