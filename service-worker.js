@@ -4,7 +4,7 @@ const BASE_PATH = '/worldtv-epg/'; // Definisci la base path del tuo repository 
 const urlsToCache = [
   BASE_PATH, // La root del tuo repository
   BASE_PATH + 'index.html',
-  // BASE_PATH + 'app.webmanifest', // AGGIORNATO QUI
+  BASE_PATH + 'manifest.webmanifest', // AGGIORNATO QUI
   BASE_PATH + 'service-worker.js',
   // Assicurati che queste icone esistano nella root del tuo repository worldtv-epg
   BASE_PATH + 'icon-192x192.png', 
@@ -45,26 +45,38 @@ self.addEventListener('install', event => {
   );
 });
 
-self.addEventListener('fetch', event => {
-  //// Aggiunta ----
-  if (event.request.url.endsWith('manifest.webmanifest')) {
-  return; // “bypass” completo
-  }
-  //// Fine aggiunta ----
+//self.addEventListener('fetch', event => {
+//  //// Aggiunta ----
+//  if (event.request.url.endsWith('manifest.webmanifest')) {
+//  return; // “bypass” completo
+//  }
+//  //// Fine aggiunta ----
 
-  // Aggiunta 16:34 31/07/2025
-  //
-  //if (event.request.url.includes('app.webmanifest')) {
-  //console.log('[Service Worker] Bypass del manifest');
-  //event.respondWith(fetch(event.request));
-  //return;
-  //}
-  //
-  // Fine Aggiunta 16:34 31/07/2025
+//  // Aggiunta 16:34 31/07/2025
+//  //
+//  //if (event.request.url.includes('app.webmanifest')) {
+//  //console.log('[Service Worker] Bypass del manifest');
+//  //event.respondWith(fetch(event.request));
+//  //return;
+//  //}
+//  //
+//  // Fine Aggiunta 16:34 31/07/2025
   
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      })
   );
 });
 
