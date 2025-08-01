@@ -62,11 +62,11 @@ self.addEventListener('install', event => {
 //  //
 //  // Fine Aggiunta 16:34 31/07/2025
   
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
-});
+//  event.respondWith(
+//    caches.match(event.request)
+//      .then(response => response || fetch(event.request))
+//  );
+//});
 
 self.addEventListener('fetch', event => {
   event.respondWith(
